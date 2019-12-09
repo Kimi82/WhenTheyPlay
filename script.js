@@ -1,18 +1,17 @@
-// GET is the default method, so we don't need to set it
-fetch('/hello')
-    .then(function (response) {
-        return response.text();
-    }).then(function (text) {
-        console.log('GET response text:');
-        console.log(text); // Print the greeting as text
-    });
+var addr = "192.168.1.100"
+var port = "8000"
 
-// Send the same request
-fetch('/hello')
-    .then(function (response) {
-        return response.json(); // But parse it as JSON this time
+function makeQuery(name, age){
+    jQuery.get("http://"+addr+":"+port+"/dataQuery/"+ name+ "/" + age, function(result){
+        myRes = jQuery.parseJSON(result);
+        toStore= "<table border='2' bordercolor='#397056'><tr><td><strong>name</strong></td><td><strong>age</strong></td></tr>";
+        $.each(myRes, function(i, element){
+            toStore= toStore+ "<tr><td>"+element.name+"</td><td>" + element.age+ "</td></td></tr>";
+        })
+        toStore= toStore+ "</table>"
+        $('#theDataDiv').text('');
+        $('<br/>').appendTo('#theDataDiv');
+        $(toStore).appendTo('#theDataDiv');
+        $('<br/>').appendTo('#theDataDiv');
     })
-    .then(function (json) {
-        console.log('GET response as JSON:');
-        console.log(json); // Here’s our JSON object
-    })
+}
