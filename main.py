@@ -1,28 +1,53 @@
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, jsonify, request, render_template
-app = Flask(__name__)
+from bottle import hook, response, route, run, static_file, request
+import json
+import socket
+import sqlite3
 
-@app.route('/hello', methods=['GET', 'POST'])
-def hello():
+#These lines are needed for avoiding the "Access-Control-Allow-Origin" errors
+@hook('after_request')
+def enable_cors():
+    response.headers['Access-Control-Allow-Origin'] = '*'
 
-    # POST request
-    if request.method == 'POST':
-        print('Incoming..')
-        print(request.get_json())  # parse as JSON
-        return 'OK', 200
+#Note that the text on the route decorator is the name of the resource
+# and the name of the function which answers the request could have any name
+@route('/examplePage')
+def exPage():
+    return "<h1>This is an example of web page</h1><hr/><h2>Hope you enjoy it!</h2>"
 
-    # GET request
-    else:
-        message = {'greeting':'Hello from Flask!'}
-        return jsonify(message)  # serialize and use JSON headers
+#If you want to return a JSON you can use a common dict of Python,
+# the conversion to JSON is automatically done by the framework
+@route('/sampleJSON', method='GET')
+def mySample():
+    return { "first": "This is the first", "second": "the second one here", "third": "and finally the third one!" }
 
-@app.route('/test')
-def test_page():
-    # look inside `templates` and serve `index.html`
-    return render_template('index.html')
+#If you have to send parameters, the right sintax is as calling the resoure
+# with a kind of path, with the parameters separed with slash ( / ) and they
+# MUST to be written inside the lesser/greater than signs  ( <parameter_name> )
+@route('/dataQuery/<name>/<age>')
+def myQuery(name,age):
+    connection= sqlite3.connect("C:/folder/data.db")
+    mycursor = connection.cursor()
+    mycursor.execute("select * from client where name = ? and age= ?",(name, age))
+    results = mycursor.fetchall()
+    theQuery = []
+    for tuple in results:
+        theQuery.append({"name":tuple[0],"age":tuple[1]})
+    return json.dumps(theQuery)
 
+#If you want to send images in jpg format you can use this below
+@route('/images/<filename:re:.*\.jpg>')
+def send_image(filename):
+    return static_file(filename, root="C:/folder/images", mimetype="image/jpg")
 
+#To send a favicon to a webpage use this below
+@route('/favicon.ico')
+def favicon():
+    return static_file('windowIcon.ico', root="C:/folder/images", mimetype="image/ico")
+
+#And the MOST important line to set this program as a web service provider is this
+run(host=socket.gethostname(), port=8000)
 
 
 
